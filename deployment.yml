@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${APP_NAME}-deployment
+  labels:
+    app: ${APP_NAME}
+spec:
+  replicas: ${REPLICAS}
+  selector:
+    matchLabels:
+      app: ${APP_NAME}
+  template:
+    metadata:
+      labels:
+        app: ${APP_NAME}
+    spec:
+      containers:
+        - name: ${APP_NAME}
+          image: ${IMAGE_REPO}:${IMAGE_TAG}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3212
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: ${DB_URL}
+            - name: SPRING_DATASOURCE_USERNAME
+              value: ${DB_USERNAME}
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: ${DB_PASSWORD}
+
+            # Shared secret between Authentication and roles. The roles
+            # service requires this on every request and Authentication's
+            # Feign client passes it as a header. Must match the
+            # INTERNAL_ROLE_SERVICE_KEY env var on the Authentication
+            # deployment exactly.
+            - name: INTERNAL_ROLE_SERVICE_KEY
+              value: ${INTERNAL_ROLE_SERVICE_KEY}
+
+            # URL of the Authentication service. The roles service uses
+            # this for any callback validation it does back into auth.
+            # Internal cluster DNS — not the public host.
+            - name: DIGITAL_APP_AUTHENTICATION
+              value: ${AUTHENTICATION_SERVICE_URL}
+
+            - name: SWAGGER_ENABLED
+              value: "${SWAGGER_ENABLED}"
+
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+
+          readinessProbe:
+            tcpSocket:
+              port: 3212
+            initialDelaySeconds: 20
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            tcpSocket:
+              port: 3212
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            # roles is the lightest service in the stack — no Kafka, no
+            # multipart uploads, only a handful of role-CRUD endpoints.
+            requests:
+              cpu: "50m"
+              memory: "256Mi"
+            limits:
+              cpu: "400m"
+              memory: "512Mi"

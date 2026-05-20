@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: roles
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    show-sql: true
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+internal:
+  role-service-key: ${INTERNAL_ROLE_SERVICE_KEY}
+
+server:
+  port: 3212
+  servlet:
+    context-path: /roles
+
+springdoc:
+  swagger-ui:
+    path: /swagger.html
+
+digital:
+  app:
+    authentication: ${AUTHENTICATION_SERVICE_URL}

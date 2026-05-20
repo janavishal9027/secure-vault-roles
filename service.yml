@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${APP_NAME}-service
+  labels:
+    app: ${APP_NAME}
+spec:
+  type: ClusterIP
+  selector:
+    app: ${APP_NAME}
+  ports:
+    - protocol: TCP
+      # Authentication's Feign client reaches this on port 80 → 3212 via
+      # the internal cluster DNS name `${APP_NAME}-service`. Stays
+      # in-cluster regardless of whether you deploy the Ingress.
+      port: 80
+      targetPort: 3212

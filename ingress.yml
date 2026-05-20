@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ${APP_NAME}-ingress
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: ${INGRESS_HOST}
+      http:
+        paths:
+          # NOTE: the frontend never calls /roles directly — the only
+          # legitimate caller is Authentication via its Feign client on
+          # the internal network. This Ingress exists for parity with the
+          # other services (and to allow Swagger access when
+          # SWAGGER_ENABLED=true). For prod you can comment out the entire
+          # ingress.yml apply in ci/deploy-remote.sh to keep roles fully
+          # private.
+          - path: /roles
+            pathType: Prefix
+            backend:
+              service:
+                name: ${APP_NAME}-service
+                port:
+                  number: 80
