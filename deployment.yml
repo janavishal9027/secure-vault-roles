@@ -36,11 +36,19 @@ spec:
             - name: INTERNAL_ROLE_SERVICE_KEY
               value: ${INTERNAL_ROLE_SERVICE_KEY}
 
-            # URL of the Authentication service. The roles service uses
-            # this for any callback validation it does back into auth.
+            # URL of the Authentication service. Still used by the roles
+            # Feign client for username -> user lookups (createRole). Token
+            # validation no longer calls back here — it's verified locally
+            # from the shared JWT secret below.
             # Internal cluster DNS — not the public host.
             - name: DIGITAL_APP_AUTHENTICATION
               value: ${AUTHENTICATION_SERVICE_URL}
+
+            # Shared HMAC secret used to verify JWTs issued by Authentication
+            # locally (no network round-trip). MUST be byte-identical to the
+            # JWT_SECRET on the Authentication deployment.
+            - name: JWT_SECRET_KEY
+              value: ${JWT_SECRET}
 
             - name: SWAGGER_ENABLED
               value: "${SWAGGER_ENABLED}"

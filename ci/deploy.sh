@@ -9,6 +9,9 @@
 #   DB_URL, DB_PASSWORD,
 #   INTERNAL_ROLE_SERVICE_KEY     # shared with Authentication
 #   AUTHENTICATION_SERVICE_URL    # internal cluster URL
+#   JWT_SECRET                    # shared HMAC secret — MUST match the value
+#                                 # Authentication signs tokens with (and the
+#                                 # one used by notes / ai-core-service)
 # Optional:
 #   DB_USERNAME (postgres), REPLICAS (1), SWAGGER_ENABLED (false)
 
@@ -28,6 +31,7 @@ set -euo pipefail
 : "${DB_PASSWORD:?}"
 : "${INTERNAL_ROLE_SERVICE_KEY:?}"
 : "${AUTHENTICATION_SERVICE_URL:?}"
+: "${JWT_SECRET:?}"
 
 DB_USERNAME="${DB_USERNAME:-postgres}"
 REPLICAS="${REPLICAS:-1}"
@@ -60,6 +64,7 @@ render_file() {
     -e "s|\${DB_PASSWORD}|${DB_PASSWORD}|g" \
     -e "s|\${INTERNAL_ROLE_SERVICE_KEY}|${INTERNAL_ROLE_SERVICE_KEY}|g" \
     -e "s|\${AUTHENTICATION_SERVICE_URL}|${AUTHENTICATION_SERVICE_URL}|g" \
+    -e "s|\${JWT_SECRET}|${JWT_SECRET}|g" \
     -e "s|\${SWAGGER_ENABLED}|${SWAGGER_ENABLED}|g" \
     "$in" > "$out"
 }
@@ -77,6 +82,7 @@ for f in rendered/*.yml; do
   sed \
     -e "s|${DB_PASSWORD}|***DB_PASSWORD***|g" \
     -e "s|${INTERNAL_ROLE_SERVICE_KEY}|***INTERNAL_ROLE_SERVICE_KEY***|g" \
+    -e "s|${JWT_SECRET}|***JWT_SECRET***|g" \
     "$f"
 done
 

@@ -20,6 +20,14 @@ spring:
 internal:
   role-service-key: ${INTERNAL_ROLE_SERVICE_KEY}
 
+# Shared HMAC secret used to verify JWTs issued by the Authentication
+# service. Must be byte-identical to the value Authentication signs with
+# (and the same secret used by notes / ai-core-service), otherwise tokens
+# minted by Authentication won't validate here.
+security:
+  jwt:
+    secret-key: ${JWT_SECRET_KEY}
+
 server:
   port: 3212
   servlet:
