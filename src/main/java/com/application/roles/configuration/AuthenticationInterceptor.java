@@ -1,8 +1,10 @@
 package com.application.roles.configuration;
 
-import com.application.roles.service.JwtService;
+import com.application.roles.dtos.TokenIntrospectionResponse;
+import com.application.roles.feignService.AuthenticationClient;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -13,10 +15,10 @@ import java.util.List;
 @Component
 public class AuthenticationInterceptor implements HandlerInterceptor {
 
-    private final JwtService jwtService;
+    private final AuthenticationClient authenticationClient;
 
-    public AuthenticationInterceptor(JwtService jwtService) {
-        this.jwtService = jwtService;
+    public AuthenticationInterceptor(@Lazy AuthenticationClient authenticationClient) {
+        this.authenticationClient = authenticationClient;
     }
 
     @Override
@@ -51,23 +53,20 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             return false;
         }
 
-        // Verify the JWT locally using the shared secret — no call back into
-        // the Authentication service. JWT_SECRET_KEY must match the secret
-        // Authentication signs with.
-        String token = auth.substring(7);
-        if (!jwtService.isTokenValid(token)) {
+        TokenIntrospectionResponse introspection = authenticationClient.introspect(auth);
+        if (introspection == null || !introspection.isActive()) {
             writeJson(response, HttpStatus.UNAUTHORIZED.value(), "Invalid or expired token");
             return false;
         }
 
-        List<String> roles = jwtService.getRoles(token);
+        List<String> roles = introspection.getRoles();
         if (roles == null || !roles.contains("ROLE_ADMIN")) {
             writeJson(response, HttpStatus.FORBIDDEN.value(), "Admin role required");
             return false;
         }
 
         // Optional: attach user info for audit logs
-        request.setAttribute("auth_username", jwtService.getUsername(token));
+        request.setAttribute("auth_username", introspection.getUsername());
 
         return true;
     }
