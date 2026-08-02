@@ -48,4 +48,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse> noRecordFoundException(NoRecordsFoundException noRecordsFoundException){
         return getResponse(noRecordsFoundException.getMessage(), HttpStatus.NOT_FOUND.value());
     }
+
+    /**
+     * A rejected internal service key. Answers 401 with a fixed message so the
+     * response reveals nothing about why the key was refused.
+     */
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<ApiResponse> handleSecurityException(SecurityException securityException){
+        log.warn("internal service key check failed: {}", securityException.getMessage());
+        return getResponse("Unauthorized internal request", HttpStatus.UNAUTHORIZED.value());
+    }
 }

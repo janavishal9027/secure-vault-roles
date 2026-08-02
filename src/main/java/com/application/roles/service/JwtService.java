@@ -47,11 +47,18 @@ public class JwtService {
     }
 
     /**
-     * @return true only if the token's signature verifies and it has not expired.
+     * @return true only if the token's signature verifies, it has not expired,
+     *         and it is not a pending 2FA challenge.
      */
     public boolean isTokenValid(String token) {
         try {
-            Date expiration = parseClaims(token).getExpiration();
+            Claims claims = parseClaims(token);
+            // Authentication marks tokens issued before the second factor was
+            // presented with `mfaPending`; those authenticate nothing.
+            if (Boolean.TRUE.equals(claims.get("mfaPending", Boolean.class))) {
+                return false;
+            }
+            Date expiration = claims.getExpiration();
             return expiration == null || expiration.after(new Date());
         } catch (Exception e) {
             return false;

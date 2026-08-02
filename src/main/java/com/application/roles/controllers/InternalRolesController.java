@@ -4,6 +4,7 @@ import com.application.roles.service.RoleService;
 import com.application.roles.service.UserRoleMappingService;
 import com.application.roles.utils.ApiResponse;
 import com.application.roles.utils.Constants;
+import com.application.roles.utils.InternalKeys;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -26,9 +27,7 @@ public class InternalRolesController {
             @RequestParam String roleType,
             @RequestParam String userId
     ) {
-        if (!internalKey.equals(requestKey)) {
-            throw new RuntimeException("Unauthorized internal request");
-        }
+        InternalKeys.require(internalKey, requestKey);
 
         String normalized = roleType.toUpperCase();
         if (!normalized.startsWith("ROLE_")) {
@@ -52,9 +51,7 @@ public class InternalRolesController {
     public ResponseEntity<Long> countDelegates(
             @RequestHeader("X-INTERNAL-KEY") String requestKey
     ) {
-        if (!internalKey.equals(requestKey)) {
-            throw new RuntimeException("Unauthorized internal request");
-        }
+        InternalKeys.require(internalKey, requestKey);
 
         return ResponseEntity.ok(userRoleMappingService.countUsersByRole("ROLE_DELEGATE"));
     }
